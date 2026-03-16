@@ -185,6 +185,7 @@ QUERY (every question)
 | `CLAUDE.md`          |                                          |
 | `.gitignore`         |                                          |
 | `.streamlit/config.toml` |                                      |
+| `docs/screenshot.png`|                                          |
 
 ---
 
