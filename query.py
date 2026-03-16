@@ -8,7 +8,7 @@ from sentence_transformers import SentenceTransformer
 
 # ── Config ───────────────────────────────────────────────────────
 DB_PATH  = "./chroma_db"
-MODEL    = "claude-3-5-haiku-20241022"   # fast + cheap, great for Q&A
+MODEL    = "claude-haiku-4-5"   # fast + cheap, great for Q&A
 TOP_K    = 4                             # how many chunks to retrieve
 # ─────────────────────────────────────────────────────────────────
 

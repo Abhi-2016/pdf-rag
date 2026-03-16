@@ -7,10 +7,10 @@ import chromadb
 from sentence_transformers import SentenceTransformer
 
 # ── Config (tweak these to experiment) ──────────────────────────
-PDF_PATH  = "your_doc.pdf"   # <-- change to your PDF filename
+PDF_PATH  = "nasdaq-tsla-2026-10K-26574326.pdf"   # <-- change to your PDF filename
 DB_PATH   = "./chroma_db"    # local folder where vectors are saved
-CHUNK_SZ  = 500              # characters per chunk
-OVERLAP   = 50               # overlap between chunks
+CHUNK_SZ  = 2000             # large enough to keep full financial tables intact
+OVERLAP   = 200              # overlap so context isn't lost at boundaries
 # ────────────────────────────────────────────────────────────────
 
 

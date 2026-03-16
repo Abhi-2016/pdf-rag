@@ -13,15 +13,32 @@
 #   quit      → exit
 
 import os
+import warnings
+warnings.filterwarnings("ignore", category=Warning)  # suppress LibreSSL noise
+
+# Auto-load .env file if it exists
+def _load_env():
+    env_path = os.path.join(os.path.dirname(__file__), ".env")
+    if os.path.exists(env_path):
+        with open(env_path) as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    key, _, value = line.partition("=")
+                    k, v = key.strip(), value.strip()
+                    if not os.environ.get(k):  # set if missing or empty
+                        os.environ[k] = v
+_load_env()
+
 import pypdf
 import chromadb
 import anthropic
 from sentence_transformers import SentenceTransformer
 
 # ── Config — edit these ──────────────────────────────────────────
-PDF_PATH  = "your_doc.pdf"           # <-- your PDF filename
+PDF_PATH  = "nasdaq-tsla-2026-10K-26574326.pdf"   # <-- your PDF filename
 DB_PATH   = "./chroma_db"
-MODEL     = "claude-3-5-haiku-20241022"
+MODEL     = "claude-haiku-4-5"
 TOP_K     = 4       # chunks to retrieve per question
 CHUNK_SZ  = 500     # characters per chunk
 OVERLAP   = 50      # overlap between chunks
