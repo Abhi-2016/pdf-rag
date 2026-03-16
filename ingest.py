@@ -7,10 +7,10 @@ import chromadb
 from sentence_transformers import SentenceTransformer
 
 # ── Config (tweak these to experiment) ──────────────────────────
-PDF_PATH  = "nasdaq-tsla-2026-10K-26574326.pdf"   # <-- change to your PDF filename
+PDF_PATH  = "Slack Product FAQ.pdf"               # <-- change to your PDF filename
 DB_PATH   = "./chroma_db"    # local folder where vectors are saved
-CHUNK_SZ  = 2000             # large enough to keep full financial tables intact
-OVERLAP   = 200              # overlap so context isn't lost at boundaries
+CHUNK_SZ  = 500              # FAQ answers are short, 500 chars is plenty
+OVERLAP   = 50               # small overlap is fine for Q&A structure
 # ────────────────────────────────────────────────────────────────
 
 

@@ -1,0 +1,5 @@
+[theme]
+base = "light"          # use light mode so custom CSS colours always work
+
+[server]
+headless = false        # open browser automatically
