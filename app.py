@@ -38,8 +38,27 @@ def load_resources():
     return embed_model, collection, claude_client
 
 
-def rag_query(question, embed_model, collection, claude_client):
-    """Full RAG pipeline: retrieve → build prompt → ask Claude."""
+def build_history_text(history, max_turns=5):
+    """
+    Format the last N conversation turns into a readable string
+    for injection into the Claude prompt.
+
+    Why cap at 5 turns?
+      - Keeps the prompt from growing too large (token cost)
+      - Recent context is most relevant for follow-ups
+    """
+    if not history:
+        return ""
+    recent = history[-max_turns:]
+    lines  = ["CONVERSATION SO FAR:"]
+    for turn in recent:
+        lines.append(f"User: {turn['question']}")
+        lines.append(f"Assistant: {turn['answer']}\n")
+    return "\n".join(lines)
+
+
+def rag_query(question, history, embed_model, collection, claude_client):
+    """Full RAG pipeline: retrieve → build prompt (with history) → ask Claude."""
     results = collection.query(
         query_embeddings=embed_model.encode([question]).tolist(),
         n_results=TOP_K,
@@ -53,14 +72,22 @@ def rag_query(question, embed_model, collection, claude_client):
         f"[Page {m['page']}]\n{c}" for c, m in zip(chunks, metas)
     )
 
+    # Build conversation history block (empty string if first question)
+    history_text = build_history_text(history)
+
+    # History is injected BEFORE the current question so Claude
+    # can resolve references like "it", "that", "tell me more"
     prompt = f"""You are a helpful assistant answering questions about a product FAQ.
 Answer using ONLY the context provided. Always cite which page the answer comes from.
 If the answer is not in the context, say: "I couldn't find that in the document."
+Use the conversation history to understand follow-up questions and references.
 
-CONTEXT:
+{history_text}
+
+CONTEXT (retrieved for current question):
 {context}
 
-QUESTION: {question}
+CURRENT QUESTION: {question}
 
 ANSWER:"""
 
@@ -123,6 +150,37 @@ st.markdown("""
         margin-top: 8px;
     }
 
+    /* User chat bubble */
+    .user-bubble {
+        background-color: #e8f0fe;
+        border-radius: 16px 16px 4px 16px;
+        padding: 10px 16px;
+        margin: 8px 0 4px auto;
+        max-width: 80%;
+        font-size: 0.9rem;
+        color: #1a1a1a;
+        text-align: right;
+        float: right;
+        clear: both;
+    }
+
+    /* Claude chat bubble */
+    .claude-bubble {
+        background-color: #f0f2f6;
+        border-left: 3px solid #4a90d9;
+        border-radius: 4px 16px 16px 16px;
+        padding: 10px 16px;
+        margin: 4px 0 8px 0;
+        max-width: 80%;
+        font-size: 0.9rem;
+        color: #1a1a1a;
+        float: left;
+        clear: both;
+    }
+
+    /* Clear float after chat bubbles */
+    .chat-clearfix { clear: both; }
+
     /* Hide Streamlit default footer */
     footer { visibility: hidden; }
 </style>
@@ -143,9 +201,47 @@ except Exception as e:
     st.stop()
 
 
-# ── Session state — tracks the active question in the text box ──
-if "query" not in st.session_state:
-    st.session_state.query = ""
+# ── Session state ────────────────────────────────────────────────
+# query    — the current text in the input box (populated by bubbles)
+# history  — list of {question, answer, pages} for the whole conversation
+if "query"   not in st.session_state:
+    st.session_state.query   = ""
+if "history" not in st.session_state:
+    st.session_state.history = []
+
+
+# ── Conversation history display ─────────────────────────────────
+if st.session_state.history:
+
+    # Header row: "Conversation" label + "New conversation" button
+    col_title, col_btn = st.columns([4, 1])
+    with col_title:
+        st.markdown("**Conversation**")
+    with col_btn:
+        if st.button("🗑 Clear", help="Start a new conversation"):
+            st.session_state.history = []
+            st.session_state.query   = ""
+            st.rerun()
+
+    # Render each turn as chat bubbles
+    for turn in st.session_state.history:
+        # User bubble (right-aligned)
+        st.markdown(
+            f'<div class="user-bubble">🧑 {turn["question"]}</div>'
+            f'<div class="chat-clearfix"></div>',
+            unsafe_allow_html=True
+        )
+        # Claude bubble (left-aligned)
+        pages_str = " ".join(f'<span class="source-pill">Page {p}</span>'
+                             for p in turn["pages"])
+        st.markdown(
+            f'<div class="claude-bubble">🤖 {turn["answer"]}'
+            f'<div style="margin-top:8px">{pages_str}</div></div>'
+            f'<div class="chat-clearfix"></div>',
+            unsafe_allow_html=True
+        )
+
+    st.divider()
 
 
 # ── Suggested question bubbles ───────────────────────────────────
@@ -181,27 +277,49 @@ question = user_input.strip()
 if ask_clicked and question:
     with st.spinner("Searching document and asking Claude..."):
         try:
+            # Pass conversation history into RAG so Claude has context
             answer, chunks, metas, distances = rag_query(
-                question, embed_model, collection, claude_client
+                question, st.session_state.history,
+                embed_model, collection, claude_client
             )
 
-            # Answer — st.info() handles dark/light mode automatically
-            st.info(answer)
-
-            # Source pages
             pages = sorted(set(m["page"] for m in metas))
-            pills = "".join(f'<span class="source-pill">Page {p}</span>' for p in pages)
-            st.markdown(f"<div style='margin-top:8px'>Sources: {pills}</div>", unsafe_allow_html=True)
 
-            # Expandable: show raw retrieved chunks
-            with st.expander("🔍 View retrieved chunks"):
-                for i, (chunk, meta, dist) in enumerate(zip(chunks, metas, distances)):
-                    st.markdown(f"**Chunk {i+1} — Page {meta['page']} — distance: `{round(dist, 3)}`**")
-                    st.text(chunk)
-                    st.divider()
+            # Save this turn to history so the next question can reference it
+            st.session_state.history.append({
+                "question": question,
+                "answer":   answer,
+                "pages":    pages
+            })
+
+            # Clear the input box ready for the next question
+            st.session_state.query = ""
+
+            # Rerun so the new history bubble renders at the top
+            # before showing the debug expander
+            st.rerun()
 
         except Exception as e:
             st.error(f"Something went wrong: {e}")
 
 elif ask_clicked and not question:
     st.warning("Please enter a question first.")
+
+
+# ── Debug expander — shows chunks from the LAST turn ─────────────
+if st.session_state.history:
+    last_q = st.session_state.history[-1]["question"]
+    with st.expander("🔍 View retrieved chunks for last answer"):
+        results = collection.query(
+            query_embeddings=embed_model.encode([last_q]).tolist(),
+            n_results=TOP_K,
+            include=["documents", "metadatas", "distances"]
+        )
+        for i, (chunk, meta, dist) in enumerate(zip(
+            results["documents"][0],
+            results["metadatas"][0],
+            results["distances"][0]
+        )):
+            st.markdown(f"**Chunk {i+1} — Page {meta['page']} — distance: `{round(dist, 3)}`**")
+            st.text(chunk)
+            st.divider()
