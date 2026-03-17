@@ -22,6 +22,10 @@ INGESTION (run once per PDF)
 
 QUERY (every question)
   Question → embed → similarity search → top chunks → Claude → answer
+
+CONVERSATION MEMORY
+  Each Q&A turn is stored in session state → injected into the next
+  prompt so Claude can resolve follow-ups like "tell me more" or "it"
 ```
 
 The system never makes up answers. If something isn't in the document, it says so.
@@ -106,8 +110,11 @@ Opens at [http://localhost:8501](http://localhost:8501)
 
 **Browser UI (`app.py`)**
 - Click a suggested question bubble or type your own
-- Click **Ask →** to get an answer
-- View source page numbers and expand raw chunks for debugging
+- Press **Enter** or click **Ask →** to send — no mouse required
+- Input auto-clears after each submission
+- Ask follow-up questions — the app remembers the full conversation
+- Click **🗑 Clear** to start a fresh conversation
+- View source page citations and expand raw chunks for debugging
 
 **Terminal (`query.py`)**
 ```bash
@@ -168,9 +175,10 @@ All tuning knobs live at the top of each file:
 - [x] Suggested question bubbles
 - [x] Source page citations
 - [x] Debug chunk viewer
+- [x] Conversation memory (follow-up questions with context)
+- [x] Enter-to-send and auto-clear input
 - [ ] PDF file uploader in the UI
 - [ ] Multi-PDF support
-- [ ] Conversation memory (follow-up questions)
 - [ ] Confidence score indicator
 - [ ] Evals — measure retrieval and answer quality
 

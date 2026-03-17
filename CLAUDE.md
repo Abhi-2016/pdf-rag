@@ -137,6 +137,7 @@ python3 ingest.py
 | API key not found in Streamlit | Streamlit spawns a new process that doesn't inherit `source .env` | `load_dotenv()` inside `app.py` via `python-dotenv` |
 | Answer box invisible in dark mode | CSS `.answer-box` had no explicit text colour | Added `color: #1a1a1a` + switched to `st.info()` |
 | Model deprecated error | `claude-3-5-haiku-20241022` reached end-of-life | Updated to `claude-haiku-4-5` across all files |
+| Enter key didn't submit | Plain `st.button` only responds to click | Wrapped input + button in `st.form` |
 
 ---
 
@@ -152,9 +153,14 @@ INGESTION (once per PDF)
 QUERY (every question)
   User question → embed with same model
                 → cosine similarity search → top 3-4 chunks (ChromaDB)
-                → build prompt: instructions + chunks + question
+                → build prompt:
+                    [system instructions]
+                    [conversation history — last 5 turns]   ← memory
+                    [retrieved chunks — current question]   ← retrieval
+                    [current question]
                 → send to Claude (claude-haiku-4-5)
                 → return answer + page citations
+                → save turn to st.session_state.history
 ```
 
 ---
@@ -165,6 +171,12 @@ QUERY (every question)
 |---|---|
 | Suggested question bubbles | `st.button()` in `st.columns()`, writes to `st.session_state` |
 | Bubble → text box population | `st.session_state.query` read by `st.text_input(value=...)` |
+| Enter to send | `st.form` wrapping input + button — Enter submits the form |
+| Auto-clear input | `clear_on_submit=True` on `st.form` wipes input after submit |
+| Conversation memory | `st.session_state.history` list of `{question, answer, pages}` turns |
+| History in prompt | `build_history_text()` formats last 5 turns, injected before question |
+| Chat bubble UI | Custom HTML/CSS floated divs — user right, Claude left |
+| Clear conversation | `🗑 Clear` button resets `history` and `query` in session state |
 | Answer display | `st.info()` — handles dark/light mode automatically |
 | Source page pills | Custom HTML/CSS via `st.markdown(unsafe_allow_html=True)` |
 | Raw chunk debugger | `st.expander()` with chunk text and similarity distances |
@@ -196,9 +208,11 @@ QUERY (every question)
 - [x] Source page citations
 - [x] Debug chunk viewer with similarity distances
 - [x] README and CLAUDE.md documentation
+- [x] Conversation memory — last 5 turns injected into prompt
+- [x] Chat bubble UI — user right, Claude left, Clear button
+- [x] Enter-to-send and auto-clear input (`st.form`)
 - [ ] PDF file uploader in the UI
 - [ ] Multi-PDF support with metadata filtering
-- [ ] Conversation memory for follow-up questions
 - [ ] Confidence score indicator based on retrieval distance
 - [ ] Evals — measure retrieval quality and answer accuracy
 
