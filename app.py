@@ -260,15 +260,18 @@ for row_start in range(0, len(SUGGESTED_QUESTIONS), cols_per_row):
 st.divider()
 
 
-# ── Text input ───────────────────────────────────────────────────
-user_input = st.text_input(
-    label="Your question",
-    value=st.session_state.query,
-    placeholder="Type a question or click a bubble above...",
-    label_visibility="collapsed"
-)
-
-ask_clicked = st.button("Ask →", type="primary", use_container_width=False)
+# ── Text input + Ask button wrapped in a form ────────────────────
+# st.form does two things for us:
+#   1. Enter key submits the form (no need to click Ask)
+#   2. clear_on_submit=True wipes the input after every submission
+with st.form("question_form", clear_on_submit=True):
+    user_input = st.text_input(
+        label="Your question",
+        value=st.session_state.query,
+        placeholder="Type a question or click a bubble above...",
+        label_visibility="collapsed"
+    )
+    ask_clicked = st.form_submit_button("Ask →", type="primary")
 
 
 # ── Run RAG when question is submitted ───────────────────────────
