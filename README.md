@@ -1,5 +1,11 @@
 # 📄 PDF RAG — Chat with Your Documents
 
+![Python](https://img.shields.io/badge/Python-3.9+-3776AB?logo=python&logoColor=white)
+![Claude](https://img.shields.io/badge/Claude-Haiku%204.5-D97757?logo=anthropic&logoColor=white)
+![Streamlit](https://img.shields.io/badge/Streamlit-1.50+-FF4B4B?logo=streamlit&logoColor=white)
+![ChromaDB](https://img.shields.io/badge/ChromaDB-1.5+-orange)
+![License](https://img.shields.io/badge/License-MIT-green)
+
 A **Claude-native Retrieval-Augmented Generation (RAG)** system that lets you ask questions about any PDF and get grounded, cited answers. Built from scratch as a learning POC — no LangChain, every step is visible and explained.
 
 > Built by [Abhi-2016](https://github.com/Abhi-2016) · Powered by [Claude](https://anthropic.com) · Co-authored with Claude Sonnet 4.6
