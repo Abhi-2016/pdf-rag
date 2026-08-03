@@ -190,6 +190,25 @@ This project was built as a learning POC covering five areas:
 
 ---
 
+## Lessons Learned
+
+Key wrong calls made during the build and what was corrected — useful context for anyone extending this project.
+
+**Technical**
+- `source .env` doesn't work in Streamlit — Streamlit spawns a subprocess. Use `load_dotenv()` inside `app.py`.
+- Custom injected HTML bypasses Streamlit's theme system. Prefer native components (`st.info()`) for anything that needs to work in dark mode.
+- `st.button` only responds to clicks, not Enter. Use `st.form` to capture keyboard submission.
+- Model ID strings go stale. Pin to an alias (`claude-haiku-4-5`) not a dated version string.
+- Chunk size is document-type specific — tune it against your actual content, not a generic default.
+
+**AI PM**
+- Documentation written after the code loses the architectural "why." Write CLAUDE.md and PLAN.md at commit 1.
+- Evals deferred to "later" never get built. A minimal retrieval eval belongs in phase 1.
+- A global chunk size constant can't serve multiple document types — changing it for one silently breaks the other.
+- If the README says "chat with any PDF" but the path is hardcoded, that's a product-promise gap. Scope the promise to match the product.
+
+---
+
 ## Roadmap
 
 - [x] Terminal-based RAG pipeline

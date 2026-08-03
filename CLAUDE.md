@@ -201,6 +201,33 @@ QUERY (every question)
 
 ---
 
+## Key Wrong Calls & Corrections
+
+Decisions that didn't work, what broke, and the fix applied. Split into technical and AI PM calls.
+
+### Technical
+
+| # | Wrong Call | What Broke | Fix Applied |
+|---|---|---|---|
+| 1 | `source .env` for API key in Streamlit | Streamlit spawns a subprocess — doesn't inherit shell env | `load_dotenv()` inside `app.py` via `python-dotenv` |
+| 2 | Custom `.answer-box` CSS without explicit text colour | Answer invisible in dark mode | Switched to `st.info()` — handles theming automatically |
+| 3 | Hardcoded `claude-3-5-haiku-20241022` model ID | API deprecation error on every call | Updated to `claude-haiku-4-5` across all files |
+| 4 | Plain `st.button` for question submission | Enter key doesn't trigger `st.button` — click only | Wrapped in `st.form(clear_on_submit=True)` |
+| 5 | CSS assumed light background; locked app to light mode | Dark mode entirely broken for injected HTML | Locked via `.streamlit/config.toml` (documented workaround, not a real fix) |
+| 6 | LibreSSL warning not suppressed | Noisy terminal output on every run | `warnings.filterwarnings()` at module level for that specific warning |
+| 7 | Generic chunk size not tuned for document type | Poor retrieval on FAQ-style docs | Tuned `CHUNK_SZ=500`, `OVERLAP=50` for FAQ content |
+
+### AI PM
+
+| # | Wrong Call | What Broke | Fix Applied |
+|---|---|---|---|
+| 8 | Documentation written after the code | Architectural decisions lost; README arrived at commit 5, PLAN.md at commit 13 | For future projects: CLAUDE.md + PLAN.md at commit 1 |
+| 9 | Evals deferred to phase 4 — never built | No way to measure if retrieval or generation actually works | Eval now explicitly split into two axes: retrieval quality + answer accuracy |
+| 10 | `CHUNK_SZ` changed globally for TSLA 10-K (500→2000) | FAQ retrieval degraded silently — one config, two document types | Per-document chunk config needed; multi-PDF support will force this |
+| 11 | README promised "chat with any PDF" but PDF path was hardcoded | Product promise vs. actual capability misaligned from day one | File uploader on roadmap; interim fix: named constant at top of `ingest.py` |
+
+---
+
 ## AI PM Concepts Demonstrated
 
 This project was built as an AI PM portfolio piece. The decisions below map to PM thinking, not just engineering.
