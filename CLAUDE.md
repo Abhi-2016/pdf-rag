@@ -201,6 +201,23 @@ QUERY (every question)
 
 ---
 
+## AI PM Concepts Demonstrated
+
+This project was built as an AI PM portfolio piece. The decisions below map to PM thinking, not just engineering.
+
+| Concept | Decision Made | Why It Matters as a PM |
+|---|---|---|
+| Build vs. Buy | Skipped LangChain; wired everything from scratch | Transparency over velocity — every layer is explainable to a stakeholder |
+| POC Scoping | Shipped core pipeline + UI first; deferred multi-PDF, uploader, evals | Defines MVP boundary; roadmap carries the rest without scope creep |
+| AI Strategy Selection | Chose RAG over fine-tuning, map-reduce, full-context | Match the technique to the constraint — doc size, citation need, data freshness |
+| Cost Architecture | Local embeddings (free) + Haiku (cheapest tier) | Embed cost and generation cost are separate levers — design both intentionally |
+| Trust & Explainability UX | Page citations + debug chunk expander with similarity distances | Users distrust AI answers they can't verify — citations are a trust primitive |
+| Hallucination Mitigation | System prompt constrains Claude to only answer from retrieved chunks | Grounding reduces hallucination; evals measure how well — can't skip either |
+| Evaluation Planning | Evals on roadmap: retrieval quality + answer accuracy as separate axes | A retrieval failure and a generation failure need completely different fixes |
+| Documentation as Product Artifact | CLAUDE.md (internal) + README.md (public) written alongside the code | CLAUDE.md encodes decisions that git history alone won't surface |
+
+---
+
 ## Roadmap
 
 - [x] Terminal RAG pipeline (`ingest.py` + `query.py` + `rag.py`)

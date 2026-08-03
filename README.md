@@ -174,6 +174,22 @@ All tuning knobs live at the top of each file:
 
 ---
 
+## Concepts Practiced
+
+This project was built as a learning POC covering five areas:
+
+**RAG Pipeline** — PDF extraction, text chunking with overlap, local embedding, vector storage, cosine similarity search, prompt construction, conversation memory, LLM generation, page citations
+
+**Streamlit UI** — Session state, resource caching, form submission (Enter-to-send), custom HTML/CSS, suggested question bubbles, theme-safe display
+
+**Python / Dev** — Virtual environments, environment variable management, warnings suppression, modular pipeline design
+
+**AI / ML Concepts** — RAG vs. alternatives (fine-tuning, map-reduce, full-context), chunk size tradeoffs, embedding model consistency
+
+**AI PM Concepts** — Build vs. buy decisions, POC scoping, AI strategy selection, cost architecture, trust & explainability UX, hallucination mitigation, evaluation planning, documentation as a product artifact
+
+---
+
 ## Roadmap
 
 - [x] Terminal-based RAG pipeline
