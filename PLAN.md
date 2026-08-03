@@ -65,6 +65,31 @@ Build a Claude-native RAG system from scratch — no LangChain, every step visib
 
 ---
 
+## Retrospective — Wrong Calls & Corrections
+
+Decisions that didn't work and what was learned. Kept here so future work on this project doesn't repeat them.
+
+### Technical
+| Wrong Call | Root Cause | Fix |
+|---|---|---|
+| `source .env` for API key | Streamlit spawns a subprocess; shell env not inherited | `load_dotenv()` inside `app.py` |
+| Answer box invisible in dark mode | Custom CSS with no explicit text colour | Switched to `st.info()` (theme-aware native component) |
+| Deprecated model ID `claude-3-5-haiku-20241022` | Hard-coded version string across three files | Updated to `claude-haiku-4-5`; use named `MODEL` constant per file |
+| Enter key didn't submit | `st.button` only responds to click | Wrapped in `st.form(clear_on_submit=True)` |
+| CSS broke in dark mode | Injected HTML bypasses Streamlit's theme system | Locked to light mode (workaround); real fix = CSS custom properties |
+| Noisy LibreSSL warning | macOS ships LibreSSL, not OpenSSL | `warnings.filterwarnings()` scoped to that specific category |
+| Chunk size not tuned | Started with a generic value before testing on actual doc | 500 chars / 50 overlap tuned for FAQ-style content |
+
+### AI PM
+| Wrong Call | What Broke | Lesson |
+|---|---|---|
+| Documentation written after code | Architectural decisions not captured while fresh; PLAN.md created 13 commits in | Write CLAUDE.md + PLAN.md before or at first commit |
+| Evals deferred to phase 4 | No way to measure retrieval or generation quality at any point | Minimal eval (known Q→expected chunk) belongs in phase 1 |
+| Global chunk size changed for one doc type | TSLA 10-K needed 2000-char chunks; FAQ needed 500 — one config broke the other | Chunk config must be per-document or per-collection |
+| README promised "any PDF"; system was hardcoded | Product promise vs. actual capability misaligned at launch | Scope the promise to match the product, or build the uploader in phase 1 |
+
+---
+
 ## What Is Not Committed
 
 | Excluded | Reason |
