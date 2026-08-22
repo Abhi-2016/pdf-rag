@@ -190,6 +190,22 @@ This project was built as a learning POC covering five areas:
 
 ---
 
+## Advanced RAG Course
+
+This repo is also a structured learning project that progressively upgrades the baseline RAG system through 5 production architectures. Each module is built on its own branch with evals alongside.
+
+| Module | Architecture | What It Adds | Status |
+|---|---|---|---|
+| 1 | Corrective RAG (CRAG) | Retrieval grader + query rewriting + web fallback | 🔲 |
+| 2 | Hybrid RAG | BM25 sparse retrieval + Reciprocal Rank Fusion | 🔲 |
+| 3 | Agentic RAG | Planner agent + multi-tool retrieval loop | 🔲 |
+| 4 | Multimodal RAG | Image/chart/table support via ColPali + Claude vision | 🔲 |
+| 5 | GraphRAG | Knowledge graph + subgraph retrieval + community summaries | 🔲 |
+
+See `PLAN.md` for full module specs, ground rules, and eval targets.
+
+---
+
 ## Lessons Learned
 
 Key wrong calls made during the build and what was corrected — useful context for anyone extending this project.

@@ -201,6 +201,47 @@ QUERY (every question)
 
 ---
 
+## Advanced RAG Course — Working Agreement
+
+This project now doubles as a structured learning course. The following rules govern all module work.
+
+### Ground Rules
+1. PLAN.md, CLAUDE.md, and README.md updated after every module commit
+2. Every module on its own branch, merged to main when complete
+3. User drives all decisions — Claude explains and guides, user approves before any code is written
+4. Evals built for every module, not deferred
+5. Claude explains the concept being practised before any code is written
+6. For PM exercises (eval design, architecture decisions), Claude asks questions — user builds the answer — Claude does not generate output unprompted
+7. Honest, direct feedback — Claude pushes back when something is underdeveloped or wrong
+
+### Learning Tracker
+
+| Module | Architecture | Status | Branch | Key Concepts |
+|---|---|---|---|---|
+| 1 | Corrective RAG (CRAG) | 🔲 Not started | `module/crag` | LLM-as-judge, query rewriting, fallback design |
+| 2 | Hybrid RAG | 🔲 Not started | `module/hybrid-rag` | BM25, sparse+dense, Reciprocal Rank Fusion |
+| 3 | Agentic RAG | 🔲 Not started | `module/agentic-rag` | Tool-use loop, planner agent, multi-strategy retrieval |
+| 4 | Multimodal RAG | 🔲 Not started | `module/multimodal-rag` | ColPali/CLIP, vision LLM, unified vector index |
+| 5 | GraphRAG | 🔲 Not started | `module/graphrag` | Knowledge graph, entity extraction, community summaries |
+
+### AI PM Concepts Tracker
+
+| Concept | Module | Status |
+|---|---|---|
+| Failure mode identification | CRAG | 🔲 |
+| Fallback design | CRAG | 🔲 |
+| Eval-driven iteration | CRAG | 🔲 |
+| Complementary system design | Hybrid RAG | 🔲 |
+| Latency vs. accuracy tradeoff | Hybrid RAG | 🔲 |
+| Agentic vs. pipeline architecture decision | Agentic RAG | 🔲 |
+| Agent loop design | Agentic RAG | 🔲 |
+| Use case scoping for multimodal | Multimodal RAG | 🔲 |
+| Vision model cost architecture | Multimodal RAG | 🔲 |
+| Preprocessing vs. query-time tradeoff | GraphRAG | 🔲 |
+| When graph structure is worth the cost | GraphRAG | 🔲 |
+
+---
+
 ## Key Wrong Calls & Corrections
 
 Decisions that didn't work, what broke, and the fix applied. Split into technical and AI PM calls.
