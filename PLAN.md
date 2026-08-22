@@ -83,6 +83,85 @@ Build a Claude-native RAG system from scratch — no LangChain, every step visib
 
 ---
 
+## Advanced RAG Course
+
+Extends the existing pdf-rag baseline through 5 production RAG architectures. One module per architecture, one branch per module, evals built alongside each — not at the end.
+
+### Ground Rules
+1. PLAN.md, CLAUDE.md, and README.md updated after every module commit
+2. Every module on its own branch, merged to main when complete
+3. User drives all decisions — Claude explains and guides, user approves before any code is written
+4. Evals built for every module, not deferred
+5. Concept explained before any code is written
+6. For PM exercises (eval design, architecture decisions), Claude asks questions — user answers — Claude does not generate output unprompted
+7. Honest feedback — Claude pushes back when something is underdeveloped
+
+### Module 1 — Corrective RAG (CRAG) 🔲
+**What gets added:** Retrieval grader (LLM-as-judge) that scores chunk relevance. If poor → rewrite query and retry. If useless → fall back to web search.
+
+**Concepts practiced:**
+- Retrieval quality as a measurable signal
+- Conditional branching in an AI pipeline
+- LLM-as-judge pattern
+- Query rewriting as a recovery strategy
+
+**Eval:** Does grading + rewriting improve answer accuracy on known bad queries vs. current system?
+
+**AI PM concepts:** Failure mode identification, fallback design, eval-driven iteration
+
+### Module 2 — Hybrid RAG 🔲
+**What gets added:** BM25 keyword index alongside existing dense vectors. Reciprocal Rank Fusion (RRF) to merge both result sets into a single ranked list.
+
+**Concepts practiced:**
+- Sparse vs. dense retrieval and when each wins
+- Rank fusion (RRF algorithm)
+- `rank_bm25` library
+
+**Eval:** Does hybrid retrieval improve TOP_K hit rate vs. dense-only on keyword-heavy queries?
+
+**AI PM concepts:** Complementary system design, retrieval quality measurement, latency vs. accuracy tradeoff articulation
+
+### Module 3 — Agentic RAG 🔲
+**What gets added:** Planner/agent (Claude tool-use loop) that decides which retrieval tool to use — vector search, web search, or structured query — before retrieving. Loops until confident, then passes to a reasoner agent.
+
+**Concepts practiced:**
+- Tool-use loop (tool_use / tool_result API)
+- Agent as planner, not just responder
+- Multiple retrieval strategies as callable tools
+- Agentic loop termination
+
+**Eval:** Does the planner select the right tool for different question types?
+
+**AI PM concepts:** When to use agentic vs. pipeline architecture, latency vs. capability tradeoff, agent loop design
+
+### Module 4 — Multimodal RAG 🔲
+**What gets added:** Support for PDFs containing images, charts, and tables using a shared multimodal embedding model (ColPali or CLIP). Unified vector index. Claude vision for generation.
+
+**Concepts practiced:**
+- Multimodal embedding models (ColPali/CLIP)
+- Unified vs. separate indices for different content types
+- Claude vision API
+
+**Eval:** Does the system correctly answer questions that require reading a chart or table?
+
+**AI PM concepts:** When multimodal matters (and when it doesn't), cost implications of vision models, use case scoping
+
+### Module 5 — GraphRAG 🔲
+**What gets added:** Knowledge graph from the PDF — entities as nodes, relationships as edges. Subgraph retrieval instead of chunk retrieval. Community summaries for broad questions.
+
+**Concepts practiced:**
+- Knowledge graph construction from unstructured text
+- Entity extraction with an LLM
+- Subgraph retrieval vs. chunk retrieval
+- Community detection (Leiden algorithm)
+- `networkx` for graph operations
+
+**Eval:** Does GraphRAG outperform dense RAG on relationship questions?
+
+**AI PM concepts:** Infrastructure cost of advanced retrieval, preprocessing vs. query-time tradeoffs, when graph structure is worth building
+
+---
+
 ## Retrospective — Wrong Calls & Corrections
 
 Decisions that didn't work and what was learned. Kept here so future work on this project doesn't repeat them.
