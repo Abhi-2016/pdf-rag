@@ -88,13 +88,21 @@ Build a Claude-native RAG system from scratch — no LangChain, every step visib
 Extends the existing pdf-rag baseline through 5 production RAG architectures. One module per architecture, one branch per module, evals built alongside each — not at the end.
 
 ### Ground Rules
-1. PLAN.md, CLAUDE.md, and README.md updated after every module commit
-2. Every module on its own branch, merged to main when complete
-3. User drives all decisions — Claude explains and guides, user approves before any code is written
-4. Evals built for every module, not deferred
-5. Concept explained before any code is written
-6. For PM exercises (eval design, architecture decisions), Claude asks questions — user answers — Claude does not generate output unprompted
-7. Honest feedback — Claude pushes back when something is underdeveloped
+1. PLAN.md, CLAUDE.md, and README.md are updated after every commit.
+2. All system prompts are written by the user and reviewed by Claude.
+3. Every module is built on its own branch and merged into main when complete.
+4. The user drives all decisions. Claude asks questions and guides — the user decides.
+5. A robust eval suite is built alongside each module. The user makes eval decisions; Claude reviews and guides.
+6. Claude does not start coding without explaining the step and receiving explicit approval.
+7. These ground rules are followed without deviation.
+8. Any proposed changes to the plan must be presented with a rationale and require user approval before taking effect.
+9. **Learning goal:** Actively ensure the user is learning Agentic AI and AI PM concepts at every step. Call out what concept is being practised.
+10. **Learn before build:** Explain the concept being practised before writing any code.
+11. **Guided discovery:** For PM exercises (eval design, architecture decisions), lead with questions — never generate output unprompted. Only draft or code once the user's thinking is captured and approved.
+12. **No leading on PM artefacts:** Never present a finished eval suite, framework, or PRD unprompted. Questions first, always.
+13. **Honest feedback:** Push back when rationale is weak. Flag unacknowledged tradeoffs. Call out strong product thinking explicitly.
+14. **Eval design before ship:** Eval rubrics, judge prompts, and pass/fail thresholds must be designed before building begins for each module.
+15. **Living learning log:** Prompt the user to reflect and update the learning log after every module. Captures concepts practised, decisions, wrong calls, and moments of strong thinking — a portfolio artefact.
 
 ### Module 1 — Corrective RAG (CRAG) 🔲
 **What gets added:** Retrieval grader (LLM-as-judge) that scores chunk relevance. If poor → rewrite query and retry. If useless → fall back to web search.
@@ -159,6 +167,16 @@ Extends the existing pdf-rag baseline through 5 production RAG architectures. On
 **Eval:** Does GraphRAG outperform dense RAG on relationship questions?
 
 **AI PM concepts:** Infrastructure cost of advanced retrieval, preprocessing vs. query-time tradeoffs, when graph structure is worth building
+
+---
+
+## Learning Log
+
+A running record updated after every module. Captures: concepts practised, decisions taken and why, wrong calls, and moments of strong product thinking. Portfolio artefact — must be honest and specific.
+
+| Module | Date | Concepts Practised | Observations |
+|---|---|---|---|
+| — | — | — | Not started |
 
 ---
 
