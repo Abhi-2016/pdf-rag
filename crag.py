@@ -65,7 +65,7 @@ def rewrite_query(question, claude_client):
 def web_search(question):
     """Fallback web search when local retrieval finds no relevant chunks."""
     try:
-        from duckduckgo_search import DDGS
+        from ddgs import DDGS
         with DDGS() as ddgs:
             results = list(ddgs.text(question, max_results=3))
         return "\n\n".join(r.get("body", "") for r in results)
