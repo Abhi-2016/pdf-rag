@@ -94,6 +94,14 @@ One module per architecture, one branch per module, evals built alongside — no
 
 ---
 
+## Learning Log
+
+| Module | Date | Concepts Practised | Reflections |
+|---|---|---|---|
+| 1 — CRAG | 2026-09-07 | LLM-as-judge, conditional branching, query rewriting, fallback design, eval design (golden test set, LLM-as-judge eval vs. grader), system boundary validation | Web fallback felt counterintuitive — realised "web search" is just one implementation of a failure path; the real design decision is who handles the failure (system, user, or human agent). Query rewriter doesn't have to be automated — HITL rewrite (ask the user to rephrase) is a valid alternative with a different latency vs. precision tradeoff. Every branch in an AI pipeline is a product decision, not just an engineering one. |
+
+---
+
 ## Key Tradeoffs
 
 **Chunk size (500 chars):** Tuned for FAQ-style docs. Smaller = more precise retrieval. Larger = more context per chunk but noisier matches. Adjust `CHUNK_SZ` in `ingest.py` and re-ingest.
