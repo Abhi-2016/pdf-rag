@@ -196,7 +196,7 @@ This repo is also a structured learning project that progressively upgrades the 
 
 | Module | Architecture | What It Adds | Status |
 |---|---|---|---|
-| 1 | Corrective RAG (CRAG) | Retrieval grader + query rewriting + web fallback | 🔄 |
+| 1 | Corrective RAG (CRAG) | Retrieval grader + query rewriting + web fallback | ✅ |
 | 2 | Hybrid RAG | BM25 sparse retrieval + Reciprocal Rank Fusion | 🔲 |
 | 3 | Agentic RAG | Planner agent + multi-tool retrieval loop | 🔲 |
 | 4 | Multimodal RAG | Image/chart/table support via ColPali + Claude vision | 🔲 |

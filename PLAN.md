@@ -81,7 +81,7 @@ One module per architecture, one branch per module, evals built alongside — no
 
 | Module | Architecture | Status |
 |---|---|---|
-| 1 | Corrective RAG (CRAG) — grader, rewriter, web fallback | 🔄 In progress |
+| 1 | Corrective RAG (CRAG) — grader, rewriter, web fallback | ✅ Complete |
 | 2 | Hybrid RAG — BM25 + dense + Reciprocal Rank Fusion | 🔲 |
 | 3 | Agentic RAG — Claude tool-use loop + planner agent | 🔲 |
 | 4 | Multimodal RAG — ColPali/CLIP + Claude vision | 🔲 |
@@ -135,7 +135,7 @@ Extends the existing pdf-rag baseline through 5 production RAG architectures. On
 14. **Eval design before ship:** Eval rubrics, judge prompts, and pass/fail thresholds must be designed before building begins for each module.
 15. **Living learning log:** Prompt the user to reflect and update the learning log after every module. Captures concepts practised, decisions, wrong calls, and moments of strong thinking — a portfolio artefact.
 
-### Module 1 — Corrective RAG (CRAG) 🔄
+### Module 1 — Corrective RAG (CRAG) ✅
 **What gets added:** Retrieval grader (LLM-as-judge) that scores chunk relevance. If poor → rewrite query and retry. If useless → fall back to web search.
 
 **Concepts practiced:**
@@ -267,7 +267,7 @@ Decisions that didn't work and what was learned. Kept here so future work on thi
 - [x] Enter-to-send and auto-clear input
 
 **Advanced RAG Course**
-- [~] Module 1 — Corrective RAG (CRAG): grader + rewriter + web fallback
+- [x] Module 1 — Corrective RAG (CRAG): grader + rewriter + web fallback
 - [ ] Module 2 — Hybrid RAG: BM25 + dense + Reciprocal Rank Fusion
 - [ ] Module 3 — Agentic RAG: Claude tool-use loop + planner agent
 - [ ] Module 4 — Multimodal RAG: ColPali/CLIP + Claude vision

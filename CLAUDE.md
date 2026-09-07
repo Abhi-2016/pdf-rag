@@ -233,7 +233,7 @@ This project now doubles as a structured learning course. The following rules go
 
 | Module | Architecture | Status | Branch | Key Concepts |
 |---|---|---|---|---|
-| 1 | Corrective RAG (CRAG) | 🔄 In progress | `module/crag` | LLM-as-judge, query rewriting, fallback design |
+| 1 | Corrective RAG (CRAG) | ✅ Complete | `module/crag` | LLM-as-judge, query rewriting, fallback design |
 | 2 | Hybrid RAG | 🔲 Not started | `module/hybrid-rag` | BM25, sparse+dense, Reciprocal Rank Fusion |
 | 3 | Agentic RAG | 🔲 Not started | `module/agentic-rag` | Tool-use loop, planner agent, multi-strategy retrieval |
 | 4 | Multimodal RAG | 🔲 Not started | `module/multimodal-rag` | ColPali/CLIP, vision LLM, unified vector index |
