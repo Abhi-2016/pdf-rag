@@ -10,6 +10,7 @@ import chromadb
 import streamlit as st
 from dotenv import load_dotenv
 from sentence_transformers import SentenceTransformer
+from crag import crag_query
 
 load_dotenv()  # reads .env file and loads ANTHROPIC_API_KEY into os.environ
 
@@ -57,47 +58,6 @@ def build_history_text(history, max_turns=5):
     return "\n".join(lines)
 
 
-def rag_query(question, history, embed_model, collection, claude_client):
-    """Full RAG pipeline: retrieve → build prompt (with history) → ask Claude."""
-    results = collection.query(
-        query_embeddings=embed_model.encode([question]).tolist(),
-        n_results=TOP_K,
-        include=["documents", "metadatas", "distances"]
-    )
-    chunks    = results["documents"][0]
-    metas     = results["metadatas"][0]
-    distances = results["distances"][0]
-
-    context = "\n\n---\n\n".join(
-        f"[Page {m['page']}]\n{c}" for c, m in zip(chunks, metas)
-    )
-
-    # Build conversation history block (empty string if first question)
-    history_text = build_history_text(history)
-
-    # History is injected BEFORE the current question so Claude
-    # can resolve references like "it", "that", "tell me more"
-    prompt = f"""You are a helpful assistant answering questions about a product FAQ.
-Answer using ONLY the context provided. Always cite which page the answer comes from.
-If the answer is not in the context, say: "I couldn't find that in the document."
-Use the conversation history to understand follow-up questions and references.
-
-{history_text}
-
-CONTEXT (retrieved for current question):
-{context}
-
-CURRENT QUESTION: {question}
-
-ANSWER:"""
-
-    msg = claude_client.messages.create(
-        model=MODEL,
-        max_tokens=512,
-        messages=[{"role": "user", "content": prompt}]
-    )
-
-    return msg.content[0].text, chunks, metas, distances
 
 
 # ── Page config ──────────────────────────────────────────────────
@@ -231,12 +191,28 @@ if st.session_state.history:
             f'<div class="chat-clearfix"></div>',
             unsafe_allow_html=True
         )
+        # CRAG path badge + rewritten query
+        path_labels = {
+            "direct":  "🟢 Direct retrieval",
+            "rewrite": "🟡 Query rewritten",
+            "web":     "🌐 Web fallback",
+        }
+        path_badge = path_labels.get(turn.get("path", "direct"), "")
+        rewritten_q = turn.get("rewritten_q")
+        rewrite_note = (
+            f'<div style="margin-top:4px;font-size:0.78rem;color:#666;font-style:italic">'
+            f'Searched as: "{rewritten_q}"</div>'
+            if rewritten_q else ""
+        )
         # Claude bubble (left-aligned)
         pages_str = " ".join(f'<span class="source-pill">Page {p}</span>'
-                             for p in turn["pages"])
+                             for p in turn.get("pages", []))
         st.markdown(
             f'<div class="claude-bubble">🤖 {turn["answer"]}'
-            f'<div style="margin-top:8px">{pages_str}</div></div>'
+            f'<div style="margin-top:8px">{pages_str}</div>'
+            f'{rewrite_note}'
+            f'<div style="margin-top:4px;font-size:0.75rem;color:#888">{path_badge}</div>'
+            f'</div>'
             f'<div class="chat-clearfix"></div>',
             unsafe_allow_html=True
         )
@@ -280,19 +256,21 @@ question = user_input.strip()
 if ask_clicked and question:
     with st.spinner("Searching document and asking Claude..."):
         try:
-            # Pass conversation history into RAG so Claude has context
-            answer, chunks, metas, distances = rag_query(
-                question, st.session_state.history,
+            history_text = build_history_text(st.session_state.history)
+            answer, chunks, metas, distances, grades, path, rewritten_q = crag_query(
+                question, history_text,
                 embed_model, collection, claude_client
             )
 
-            pages = sorted(set(m["page"] for m in metas))
+            pages = sorted(set(m["page"] for m in metas)) if metas else []
 
-            # Save this turn to history so the next question can reference it
             st.session_state.history.append({
-                "question": question,
-                "answer":   answer,
-                "pages":    pages
+                "question":   question,
+                "answer":     answer,
+                "pages":      pages,
+                "path":       path,
+                "grades":     grades,
+                "rewritten_q": rewritten_q,
             })
 
             # Clear the input box ready for the next question
@@ -309,20 +287,36 @@ elif ask_clicked and not question:
     st.warning("Please enter a question first.")
 
 
-# ── Debug expander — shows chunks from the LAST turn ─────────────
+# ── Debug expander — shows chunks and CRAG grades from the LAST turn ──
 if st.session_state.history:
-    last_q = st.session_state.history[-1]["question"]
-    with st.expander("🔍 View retrieved chunks for last answer"):
-        results = collection.query(
-            query_embeddings=embed_model.encode([last_q]).tolist(),
-            n_results=TOP_K,
-            include=["documents", "metadatas", "distances"]
-        )
-        for i, (chunk, meta, dist) in enumerate(zip(
-            results["documents"][0],
-            results["metadatas"][0],
-            results["distances"][0]
-        )):
-            st.markdown(f"**Chunk {i+1} — Page {meta['page']} — distance: `{round(dist, 3)}`**")
-            st.text(chunk)
-            st.divider()
+    last = st.session_state.history[-1]
+    with st.expander("🔍 View retrieved chunks and CRAG grades for last answer"):
+        path = last.get("path", "direct")
+        grades = last.get("grades", [])
+        st.caption(f"CRAG path: **{path}**")
+
+        if path == "web":
+            st.info(
+                "All retrieved chunks were graded IRRELEVANT — web fallback was used. "
+                "Local chunks were retrieved and graded, but none were passed to generation."
+            )
+        else:
+            results = collection.query(
+                query_embeddings=embed_model.encode([last["question"]]).tolist(),
+                n_results=TOP_K,
+                include=["documents", "metadatas", "distances"]
+            )
+            grade_colours = {"RELEVANT": "🟢", "PARTIAL": "🟡", "IRRELEVANT": "🔴"}
+            for i, (chunk, meta, dist) in enumerate(zip(
+                results["documents"][0],
+                results["metadatas"][0],
+                results["distances"][0]
+            )):
+                grade = grades[i] if i < len(grades) else "—"
+                icon  = grade_colours.get(grade, "⚪")
+                st.markdown(
+                    f"**Chunk {i+1} — Page {meta['page']} — "
+                    f"distance: `{round(dist, 3)}` — {icon} {grade}**"
+                )
+                st.text(chunk)
+                st.divider()
