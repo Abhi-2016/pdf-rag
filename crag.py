@@ -99,7 +99,8 @@ def crag_query(question, history_text, embed_model, collection, claude_client):
       "web"     — chunks are irrelevant, fall back to web search
 
     Returns:
-      answer, chunks, metas, distances, grades, path
+      answer, chunks, metas, distances, grades, path, rewritten_q
+      rewritten_q is the reformulated query string (rewrite path only), else None.
     """
     from query import retrieve, ask_claude
 
@@ -111,14 +112,16 @@ def crag_query(question, history_text, embed_model, collection, claude_client):
     overall = _best_grade(grades)
 
     # Step 3: branch
+    rewritten_q = None
+
     if overall == "RELEVANT":
         path = "direct"
         use_chunks, use_metas = chunks, metas
 
     elif overall == "PARTIAL":
         path = "rewrite"
-        rewritten = rewrite_query(question, claude_client)
-        use_chunks, use_metas, distances = retrieve(rewritten, embed_model, collection)
+        rewritten_q = rewrite_query(question, claude_client)
+        use_chunks, use_metas, distances = retrieve(rewritten_q, embed_model, collection)
 
     else:  # IRRELEVANT
         path = "web"
@@ -130,9 +133,9 @@ def crag_query(question, history_text, embed_model, collection, claude_client):
             f"QUESTION: {question}\n\nANSWER:"
         )
         answer = ask_claude(web_prompt, claude_client)
-        return answer, [], [], [], grades, path
+        return answer, [], [], [], grades, path, None
 
     # Step 4: generate (direct or rewrite path)
     prompt = _build_prompt(question, use_chunks, use_metas, history_text)
     answer = ask_claude(prompt, claude_client)
-    return answer, use_chunks, use_metas, distances, grades, path
+    return answer, use_chunks, use_metas, distances, grades, path, rewritten_q

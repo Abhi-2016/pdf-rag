@@ -191,19 +191,26 @@ if st.session_state.history:
             f'<div class="chat-clearfix"></div>',
             unsafe_allow_html=True
         )
-        # CRAG path badge
+        # CRAG path badge + rewritten query
         path_labels = {
             "direct":  "🟢 Direct retrieval",
             "rewrite": "🟡 Query rewritten",
             "web":     "🌐 Web fallback",
         }
         path_badge = path_labels.get(turn.get("path", "direct"), "")
+        rewritten_q = turn.get("rewritten_q")
+        rewrite_note = (
+            f'<div style="margin-top:4px;font-size:0.78rem;color:#666;font-style:italic">'
+            f'Searched as: "{rewritten_q}"</div>'
+            if rewritten_q else ""
+        )
         # Claude bubble (left-aligned)
         pages_str = " ".join(f'<span class="source-pill">Page {p}</span>'
                              for p in turn.get("pages", []))
         st.markdown(
             f'<div class="claude-bubble">🤖 {turn["answer"]}'
             f'<div style="margin-top:8px">{pages_str}</div>'
+            f'{rewrite_note}'
             f'<div style="margin-top:4px;font-size:0.75rem;color:#888">{path_badge}</div>'
             f'</div>'
             f'<div class="chat-clearfix"></div>',
@@ -250,7 +257,7 @@ if ask_clicked and question:
     with st.spinner("Searching document and asking Claude..."):
         try:
             history_text = build_history_text(st.session_state.history)
-            answer, chunks, metas, distances, grades, path = crag_query(
+            answer, chunks, metas, distances, grades, path, rewritten_q = crag_query(
                 question, history_text,
                 embed_model, collection, claude_client
             )
@@ -258,11 +265,12 @@ if ask_clicked and question:
             pages = sorted(set(m["page"] for m in metas)) if metas else []
 
             st.session_state.history.append({
-                "question": question,
-                "answer":   answer,
-                "pages":    pages,
-                "path":     path,
-                "grades":   grades,
+                "question":   question,
+                "answer":     answer,
+                "pages":      pages,
+                "path":       path,
+                "grades":     grades,
+                "rewritten_q": rewritten_q,
             })
 
             # Clear the input box ready for the next question
