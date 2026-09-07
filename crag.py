@@ -126,9 +126,18 @@ def crag_query(question, history_text, embed_model, collection, claude_client):
     else:  # IRRELEVANT
         path = "web"
         web_ctx = web_search(question)
+        if web_ctx.startswith("Web search unavailable"):
+            # Web search failed — return a clear message without calling Claude.
+            # Never pass a search error as WEB RESULTS — Claude will generate from
+            # training data instead of stopping, producing ungrounded output.
+            answer = (
+                "This question isn't covered in the document and the web search is "
+                "currently unavailable. Please try again or rephrase your question."
+            )
+            return answer, [], [], [], grades, path, None
         web_prompt = (
-            "You are a helpful assistant. Answer the question using the web search results below.\n"
-            "If the results don't answer the question, say so clearly.\n\n"
+            "You are a helpful assistant. Answer the question using ONLY the web search results below.\n"
+            "Do not use any prior knowledge. If the results don't contain an answer, say so clearly.\n\n"
             f"WEB RESULTS:\n{web_ctx}\n\n"
             f"QUESTION: {question}\n\nANSWER:"
         )

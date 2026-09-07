@@ -239,6 +239,7 @@ Decisions that didn't work and what was learned. Kept here so future work on thi
 | Used `duckduckgo-search` as the web search package | Package was renamed to `ddgs`; RuntimeWarning on every run; web results came back empty | Verify a new dependency with a quick test before committing it; check PyPI for renames when a package behaves unexpectedly |
 | Debug expander said "no local chunks were used" on web path | Implies retrieval didn't happen — misleading, because ChromaDB always retrieves TOP_K chunks; they were graded IRRELEVANT and discarded, not skipped | Product language must distinguish retrieval failure from a grading decision — they are different failure modes with different fixes |
 | CRAG path badge was the only transparency signal | 🟡 badge at the bottom of the bubble was too easy to miss; user didn't notice CRAG had fired at all | An explainability signal buried at the bottom of a bubble is not effective; showing the actual rewritten query ("Searched as: ...") gave real transparency |
+| Web search failure passed to Claude as results | `web_search()` returned `"Web search unavailable: <error>"`; this string was injected into the web prompt as WEB RESULTS; Claude generated from training data instead of stopping | Never pass an error string as context — Claude interprets it as sparse results and fills in from training data (ungrounded output). Short-circuit in code: detect the failure before calling Claude and return a clear failure message directly |
 
 ---
 
