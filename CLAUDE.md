@@ -150,16 +150,15 @@ INGESTION (once per PDF)
       → embed each chunk locally (sentence-transformers)
       → store vectors + text + page metadata (ChromaDB → ./chroma_db/)
 
-QUERY (every question)
+QUERY — CORRECTIVE RAG (module 1)
   User question → embed with same model
                 → cosine similarity search → top 3-4 chunks (ChromaDB)
-                → build prompt:
-                    [system instructions]
-                    [conversation history — last 5 turns]   ← memory
-                    [retrieved chunks — current question]   ← retrieval
-                    [current question]
-                → send to Claude (claude-haiku-4-5)
-                → return answer + page citations
+                → grade each chunk (LLM-as-judge → RELEVANT/PARTIAL/IRRELEVANT)
+                → branch:
+                    RELEVANT  → build prompt + generate (direct path)
+                    PARTIAL   → rewrite query → retrieve again → generate (rewrite path)
+                    IRRELEVANT → web search → generate from web results (web path)
+                → return answer + path taken + chunk grades + page citations
                 → save turn to st.session_state.history
 ```
 
@@ -234,7 +233,7 @@ This project now doubles as a structured learning course. The following rules go
 
 | Module | Architecture | Status | Branch | Key Concepts |
 |---|---|---|---|---|
-| 1 | Corrective RAG (CRAG) | 🔲 Not started | `module/crag` | LLM-as-judge, query rewriting, fallback design |
+| 1 | Corrective RAG (CRAG) | 🔄 In progress | `module/crag` | LLM-as-judge, query rewriting, fallback design |
 | 2 | Hybrid RAG | 🔲 Not started | `module/hybrid-rag` | BM25, sparse+dense, Reciprocal Rank Fusion |
 | 3 | Agentic RAG | 🔲 Not started | `module/agentic-rag` | Tool-use loop, planner agent, multi-strategy retrieval |
 | 4 | Multimodal RAG | 🔲 Not started | `module/multimodal-rag` | ColPali/CLIP, vision LLM, unified vector index |

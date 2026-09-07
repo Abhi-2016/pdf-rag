@@ -104,7 +104,7 @@ Extends the existing pdf-rag baseline through 5 production RAG architectures. On
 14. **Eval design before ship:** Eval rubrics, judge prompts, and pass/fail thresholds must be designed before building begins for each module.
 15. **Living learning log:** Prompt the user to reflect and update the learning log after every module. Captures concepts practised, decisions, wrong calls, and moments of strong thinking — a portfolio artefact.
 
-### Module 1 — Corrective RAG (CRAG) 🔲
+### Module 1 — Corrective RAG (CRAG) 🔄
 **What gets added:** Retrieval grader (LLM-as-judge) that scores chunk relevance. If poor → rewrite query and retry. If useless → fall back to web search.
 
 **Concepts practiced:**

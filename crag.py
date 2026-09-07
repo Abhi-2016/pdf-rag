@@ -11,9 +11,10 @@ GRADER_SYSTEM_PROMPT = """Your job as a judge is to grade retrieved chunks from 
 
 Grade each chunk independently and return one label per chunk."""
 
-# Ground rule 2: user writes all system prompts.
-# Fill this in before running the rewrite path.
-REWRITER_SYSTEM_PROMPT = "TODO"
+REWRITER_SYSTEM_PROMPT = """Your job as a query rewriter is as follows.
+Some times a user will pose a vague or partially-matching question that results in poor or partial chunk or chunks retrieval.
+In this scenario - you will receive this query. You should rewrite this question to be more specific and keyword rich. You must keep the original intent of the query when you rewrite it.
+Return only the rewritten question, and nothing else."""
 
 
 def _parse_grade(text):
