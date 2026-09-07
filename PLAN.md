@@ -54,6 +54,7 @@ Build a Claude-native RAG system from scratch — no LangChain, every step visib
 | **Fuzzy grade parser** | `_parse_grade()` checks IRRELEVANT before RELEVANT; safe default to IRRELEVANT | "RELEVANT" is a substring of "IRRELEVANT" — checking order matters; silent fallback prevents misrouting (AgileBot lesson) |
 | **History as pre-formatted string** | `crag_query` takes `history_text`, not the raw history list | Decouples `crag.py` from `app.py`; no circular import risk; crag module stays independently testable |
 | **CRAG path surfaced in UI** | Path badge (🟢 Direct / 🟡 Rewritten / 🌐 Web) shown on each answer | Transparency — user can see why an answer came from a different source; explainability as a trust mechanism |
+| **Rewritten query shown in UI** | Italic "Searched as: ..." line shown under the answer when rewrite path fires | Path badge alone isn't enough — showing the actual reformulated query lets the user verify what CRAG searched for; a trust signal, not just a status label |
 
 ---
 
@@ -231,6 +232,13 @@ Decisions that didn't work and what was learned. Kept here so future work on thi
 | Designed grader for "no chunk received" scenario | ChromaDB always returns TOP_K results — even OOD queries get chunks back | IRRELEVANT means chunks exist but are irrelevant, not that retrieval returned nothing |
 | Conflated CRAG system behaviour with eval logic | "Judge fires → user rewrites query" describes the system; the eval judge measures if the system worked correctly | CRAG grader (system) and eval judge (test harness) are separate concerns — design them separately |
 | Justified same threshold for both categories as "ease of build" | "Ease of build" is an engineering reason, not a product reason; doesn't hold up in a PM interview | Correct rationale: consistent baseline for v1, differentiate in v2 once failure patterns are understood |
+
+### CRAG Build Phase
+| Wrong Call | What Broke | Lesson |
+|---|---|---|
+| Used `duckduckgo-search` as the web search package | Package was renamed to `ddgs`; RuntimeWarning on every run; web results came back empty | Verify a new dependency with a quick test before committing it; check PyPI for renames when a package behaves unexpectedly |
+| Debug expander said "no local chunks were used" on web path | Implies retrieval didn't happen — misleading, because ChromaDB always retrieves TOP_K chunks; they were graded IRRELEVANT and discarded, not skipped | Product language must distinguish retrieval failure from a grading decision — they are different failure modes with different fixes |
+| CRAG path badge was the only transparency signal | 🟡 badge at the bottom of the bubble was too easy to miss; user didn't notice CRAG had fired at all | An explainability signal buried at the bottom of a bubble is not effective; showing the actual rewritten query ("Searched as: ...") gave real transparency |
 
 ---
 
