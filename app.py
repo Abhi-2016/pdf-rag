@@ -296,7 +296,10 @@ if st.session_state.history:
         st.caption(f"CRAG path: **{path}**")
 
         if path == "web":
-            st.info("This answer came from a web search — no local chunks were used.")
+            st.info(
+                "All retrieved chunks were graded IRRELEVANT — web fallback was used. "
+                "Local chunks were retrieved and graded, but none were passed to generation."
+            )
         else:
             results = collection.query(
                 query_embeddings=embed_model.encode([last["question"]]).tolist(),
