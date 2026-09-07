@@ -39,6 +39,22 @@ Build a Claude-native RAG system from scratch — no LangChain, every step visib
 | **PLAN.md** | Created retroactively at commit 13 | Architectural decisions weren't captured upfront; records the "why" behind choices for future contributors |
 | **Wrong calls categorisation** | Split into Technical and AI PM, not a single flat list | Different audiences: engineers care about technical fixes; PMs care about product and process decisions |
 
+### CRAG — Module 1 Decisions
+
+| Decision Area | What the Decision Was | Why It Was Made |
+|---|---|---|
+| **Grader placement** | Between retrieval and generation, not pre-retrieval or post-generation | Intercepts bad chunks before they reach the prompt — downstream quality gate |
+| **Per-chunk grading** | Grade each chunk independently, not as a batch | Finer-grained signal — one irrelevant chunk doesn't discard good siblings; enables best-grade routing |
+| **Three-way classification** | RELEVANT / PARTIAL / IRRELEVANT, not binary pass/fail | PARTIAL enables a middle recovery path (rewrite) cheaper than always falling back to web |
+| **Best-grade routing** | If any chunk is RELEVANT, proceed direct | One good chunk is sufficient for generation; don't discard a useful retrieval because other chunks are weak |
+| **Grader model** | Haiku for grading, same as generation | Grading is a classification task, not complex reasoning; Haiku keeps latency and cost low |
+| **Rewrite trigger** | Rewriter fires on PARTIAL only, not on every query | Rewriting every query adds latency unnecessarily; trigger only when the retrieval quality signal demands it |
+| **Web fallback provider** | DuckDuckGo via `duckduckgo-search` (free, no API key) | Zero cost for POC; swap for Serper, Brave, or Tavily in production for reliability |
+| **Separate web prompt** | Web path uses its own generation prompt, no page citation instructions | Web results have no page numbers; injecting the PDF prompt template confuses the model |
+| **Fuzzy grade parser** | `_parse_grade()` checks IRRELEVANT before RELEVANT; safe default to IRRELEVANT | "RELEVANT" is a substring of "IRRELEVANT" — checking order matters; silent fallback prevents misrouting (AgileBot lesson) |
+| **History as pre-formatted string** | `crag_query` takes `history_text`, not the raw history list | Decouples `crag.py` from `app.py`; no circular import risk; crag module stays independently testable |
+| **CRAG path surfaced in UI** | Path badge (🟢 Direct / 🟡 Rewritten / 🌐 Web) shown on each answer | Transparency — user can see why an answer came from a different source; explainability as a trust mechanism |
+
 ---
 
 ## Phases
@@ -59,14 +75,20 @@ Build a Claude-native RAG system from scratch — no LangChain, every step visib
 - `build_history_text()` formats history and injects into each prompt
 - Allows follow-up questions to resolve references ("it", "tell me more")
 
-### Phase 4 — Evals 🔲
-- Retrieval eval: are the right chunks surfaced for a given question?
-- Answer eval: is Claude's generation factually correct given the context?
-- These are separate axes — a retrieval failure and a generation failure need different fixes
+### Phase 4 — Advanced RAG Course 🔄
+One module per architecture, one branch per module, evals built alongside — not at the end.
 
-### Phase 5 — Multi-PDF Support 🔲
+| Module | Architecture | Status |
+|---|---|---|
+| 1 | Corrective RAG (CRAG) — grader, rewriter, web fallback | 🔄 In progress |
+| 2 | Hybrid RAG — BM25 + dense + Reciprocal Rank Fusion | 🔲 |
+| 3 | Agentic RAG — Claude tool-use loop + planner agent | 🔲 |
+| 4 | Multimodal RAG — ColPali/CLIP + Claude vision | 🔲 |
+| 5 | GraphRAG — knowledge graph + community summaries | 🔲 |
+
+### Phase 5 — Production Features 🔲
 - PDF file uploader in the UI (drag-and-drop)
-- ChromaDB collection per document or metadata-filtered single collection
+- Multi-PDF support with ChromaDB collection per document or metadata filtering
 - Confidence score indicator based on retrieval distance
 
 ---
@@ -80,6 +102,14 @@ Build a Claude-native RAG system from scratch — no LangChain, every step visib
 **Memory window (5 turns):** Balances follow-up resolution against token cost. Increase `HISTORY_TURNS` in `app.py` for longer sessions.
 
 **Haiku vs. Sonnet:** Haiku handles Q&A over retrieved chunks well. Switch `MODEL` to `claude-sonnet-4-5` in `app.py` if reasoning quality needs to improve.
+
+**CRAG grader latency:** The grader makes one API call per chunk before generation. At TOP_K=4, that's 4 extra Haiku calls per query. Acceptable for a POC; reduce TOP_K or batch-grade in production to cut latency.
+
+**CRAG rewrite path — double retrieval:** The PARTIAL path runs two retrievals (original + rewritten question). Doubles retrieval latency on partial-match queries. Tradeoff: better answer quality vs. slower response. Acceptable given the PARTIAL path is the minority case.
+
+**CRAG web fallback quality:** DuckDuckGo results are uncontrolled — answers may be inaccurate, outdated, or off-topic. Acceptable for POC. In production: use a verified source (Serper, Brave, Tavily) or restrict fallback to a curated domain index.
+
+**CRAG PARTIAL threshold:** The grader prompt defines what "partial" means. If the prompt is too strict, PARTIAL fires on good retrievals and triggers unnecessary rewrites. If too lenient, bad chunks reach generation unchallenged. The grader system prompt is the primary tuning lever — revisit it if the rewrite path fires too often or too rarely.
 
 ---
 
@@ -170,16 +200,6 @@ Extends the existing pdf-rag baseline through 5 production RAG architectures. On
 
 ---
 
-## Learning Log
-
-A running record updated after every module. Captures: concepts practised, decisions taken and why, wrong calls, and moments of strong product thinking. Portfolio artefact — must be honest and specific.
-
-| Module | Date | Concepts Practised | Observations |
-|---|---|---|---|
-| — | — | — | Not started |
-
----
-
 ## Retrospective — Wrong Calls & Corrections
 
 Decisions that didn't work and what was learned. Kept here so future work on this project doesn't repeat them.
@@ -203,6 +223,15 @@ Decisions that didn't work and what was learned. Kept here so future work on thi
 | Global chunk size changed for one doc type | TSLA 10-K needed 2000-char chunks; FAQ needed 500 — one config broke the other | Chunk config must be per-document or per-collection |
 | README promised "any PDF"; system was hardcoded | Product promise vs. actual capability misaligned at launch | Scope the promise to match the product, or build the uploader in phase 1 |
 
+### CRAG — Module 1
+| Wrong Call | What Broke | Lesson |
+|---|---|---|
+| Proposed keyword/sentence matching as eval signal | Synonyms and paraphrasing break keyword matching — semantically correct answers score as wrong | LLM-as-judge with semantic comparison against ground truth is the right eval signal |
+| Used "another RAG" as eval oracle | Comparing two potentially flawed systems measures model agreement, not correctness — a circular eval | Eval oracle must be human-curated ground truth with expected answers, not another model's output |
+| Designed grader for "no chunk received" scenario | ChromaDB always returns TOP_K results — even OOD queries get chunks back | IRRELEVANT means chunks exist but are irrelevant, not that retrieval returned nothing |
+| Conflated CRAG system behaviour with eval logic | "Judge fires → user rewrites query" describes the system; the eval judge measures if the system worked correctly | CRAG grader (system) and eval judge (test harness) are separate concerns — design them separately |
+| Justified same threshold for both categories as "ease of build" | "Ease of build" is an engineering reason, not a product reason; doesn't hold up in a PM interview | Correct rationale: consistent baseline for v1, differentiate in v2 once failure patterns are understood |
+
 ---
 
 ## What Is Not Committed
@@ -218,6 +247,7 @@ Decisions that didn't work and what was learned. Kept here so future work on thi
 
 ## Roadmap
 
+**Baseline (complete)**
 - [x] Terminal RAG pipeline
 - [x] Streamlit browser UI
 - [x] Suggested question bubbles
@@ -226,7 +256,15 @@ Decisions that didn't work and what was learned. Kept here so future work on thi
 - [x] Conversation memory (last 5 turns)
 - [x] Chat bubble UI + Clear button
 - [x] Enter-to-send and auto-clear input
+
+**Advanced RAG Course**
+- [~] Module 1 — Corrective RAG (CRAG): grader + rewriter + web fallback
+- [ ] Module 2 — Hybrid RAG: BM25 + dense + Reciprocal Rank Fusion
+- [ ] Module 3 — Agentic RAG: Claude tool-use loop + planner agent
+- [ ] Module 4 — Multimodal RAG: ColPali/CLIP + Claude vision
+- [ ] Module 5 — GraphRAG: knowledge graph + community summaries
+
+**Production Features**
 - [ ] PDF file uploader in the UI
 - [ ] Multi-PDF support with metadata filtering
-- [ ] Confidence score indicator
-- [ ] Evals — retrieval quality + answer accuracy
+- [ ] Confidence score indicator based on retrieval distance
